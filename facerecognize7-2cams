@@ -1,0 +1,44 @@
+import cv2
+import numpy as np #Mit Numpy kann man bilder in Zahlen darstellen. WIr können die Frames so kombinieren
+import time
+
+
+
+print(cv2.__version__)
+dispW=640
+dispH=480
+flip=2
+font = cv2.FONT_HERSHEY_SIMPLEX
+fpsReport=0 
+
+camSet = '/dev/video6' #Mit Droidcam übers handy
+cam1= cv2.VideoCapture(camSet, cv2.CAP_V4L2)
+cam2=cv2.VideoCapture(0)
+startTime= time.time()
+timeStamp = time.time() # Hier wird der Anfang des Loops festgehalten
+while True:
+    ret, frame1 = cam1.read()
+    ret, frame2 = cam2.read()
+    frame2= cv2.resize(frame2, (frame1.shape[1], frame1.shape[0])) #NP denkt in Col und dann Rows, OpenCv in x,y also rows, cols [1] sollte 640 sein und [0] 480
+    frameCombined = np.hstack((frame1,frame2))
+    dt=time.time() - timeStamp # Jetzt nehmen wir die jetzige Zeit - die Zeit am beginn des Loops damit wir die Differenz haben
+    fps= 1/dt # Wie viele Frames pro Sekunde, bsp: ein Frame jede 1/10 Sekunde, dann ist 1/(1/10)= 10 FPS
+    fpsReport=.9*fpsReport + .1*fps #Low pass filter, FPS sind die gemessene Frames, die ändern sich zu sehr und springen. Wir geben dem alten Report 95% Vertrauen und dem neuen 5 %. Bei zu großen Sprüngen, bleibt der Report trotdem konstant. 
+    timeStamp= time.time()
+    cv2.rectangle(frameCombined,(0,0),(100,40),(0,0,255),-1) # -1 macht das Rechteck solid
+    cv2.putText(frameCombined, str(round(fpsReport,1))+ 'fps', (0,25), font,.75, (0,255,255, 2))
+    cv2.imshow('Combined Cam',frameCombined)
+    cv2.moveWindow('Combined Cam',0,0)
+
+    #cv2.imshow('Droidcam',frame1)
+    #cv2.imshow('Webcam',frame2)
+    #cv2.moveWindow('Droidcam',0,0)
+    #cv2.moveWindow('Webcam',0,500)
+
+
+    if cv2.waitKey(1)==ord('q'):
+        break
+cam1.release()
+cam2.release()
+
+cv2.destroyAllWindows()

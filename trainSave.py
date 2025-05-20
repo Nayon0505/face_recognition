@@ -7,7 +7,7 @@ print(cv2.__version__)
 Encodings= []  # Das ist unser Array für die Encodings, Es ist ein Array aus Arrays, da Encodings auch Arrays sind
 Names= [] # Wir brauchen die Namen für die Encodings
 
-image_dir= '/home/nayon/Schreibtisch/facerecog/demoImages/known' # Die Directory unseres Known Verzeichnisses, Jetzt wollen wir da einmal durchgehen alle Bilder encoden, die Namen herausholen und die dann zusammenzuführen
+image_dir= '/home/nayon/Schreibtisch/facerecognition/demoImages/known' # Die Directory unseres Known Verzeichnisses, Jetzt wollen wir da einmal durchgehen alle Bilder encoden, die Namen herausholen und die dann zusammenzuführen
 
 for root, dirs, files in os.walk(image_dir): #mit der os Library und walk kann ich durch die Directories durchgehen | Wir laufen hier nur durch files
     print(files)

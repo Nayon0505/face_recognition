@@ -2,9 +2,11 @@ import face_recognition as fr
 import cv2
 import os
 import pickle
+import time
 print(cv2.__version__)
 
-
+fpsReport=0 # FÜr die FPS ermittlung
+scaleFactor=.25 # Wir verwenden den um änderungen im gesamten Model vorzunehmen um die FPSS zu optimieren
 Encodings=[]
 Names= []
 
@@ -16,9 +18,10 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 #cam = cv2.VideoCapture('/dev/video6', cv2.CAP_V4L2) #Mit Droidcam übers handy
 cam = cv2.VideoCapture(0) #Mit Webcam
 
+timeStamp = time.time() # Hier wird der Anfang des Loops festgehalten
 while True:
     _,frame = cam.read()
-    frameSmall = cv2.resize(frame,(0,0), fx=.33,fy=.33) # Frame kleiner machen für besser Leistung
+    frameSmall = cv2.resize(frame,(0,0), fx=scaleFactor,fy=scaleFactor) # Frame kleiner machen für besser Leistung
     frameRGB= cv2.cvtColor(frameSmall, cv2.COLOR_BGR2RGB)
     facePositions= fr.face_locations(frameRGB, model= 'cnn') #cnn ist ein besseres Model als das Standardmäßige HOG (Simpler und langsamer), da wir den Jetson Nano haben können wir cnn nutzen
     allEncodings = fr.face_encodings(frameRGB, facePositions)
@@ -28,13 +31,20 @@ while True:
         if True in matches:
             first_match_index= matches.index(True)
             name=Names[first_match_index]
-        top=top*3
-        right=right*3
-        bottom=bottom*3
-        left=left*3
+        top=int(top/scaleFactor)
+        right=int(right/scaleFactor)
+        bottom=int(bottom/scaleFactor)
+        left=int(left/scaleFactor)
 
         cv2.rectangle(frame,(left, top), (right, bottom), (0,0,255), 2) #Left right in Opnecv ist die X achse und Top Bottom Y, in facerecognition ist das anders, deshalb können die Kästen falsch gezeichnet werden, wenn man es falsch macht
         cv2.putText(frame,name,(left,top-6),font, .75, (0,255,255),2)
+    dt=time.time() - timeStamp # Jetzt nehmen wir die jetzige Zeit - die Zeit am beginn des Loops damit wir die Differenz haben
+    fps= 1/dt # Wie viele Frames pro Sekunde, bsp: ein Frame jede 1/10 Sekunde, dann ist 1/(1/10)= 10 FPS
+    fpsReport=.9*fpsReport + .1*fps #Low pass filter, FPS sind die gemessene Frames, die ändern sich zu sehr und springen. Wir geben dem alten Report 95% Vertrauen und dem neuen 5 %. Bei zu großen Sprüngen, bleibt der Report trotdem konstant. 
+    #print('FPS: ', round(fpsReport,1))                 # Wenn die FPS hochgehen, gehen sie immer nur um 5% hoch, also wenn sie konstant oben sind, ändert sich der Report gleichmäßog und kontinuierlich
+    timeStamp= time.time()
+    cv2.rectangle(frame,(0,0),(100,40),(0,0,255),-1) # -1 macht das Rechteck solid
+    cv2.putText(frame, str(round(fpsReport,1))+ 'fps', (0,25), font,.75, (0,255,255, 2))
     cv2.imshow('Picture', frame)
     cv2.moveWindow('Picture', 0,0)
     if cv2.waitKey(1)== ord('q'):

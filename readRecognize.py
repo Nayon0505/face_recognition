@@ -18,7 +18,7 @@ with open('train.pkl', 'rb') as f:
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-image_dir = '/home/nayon/Schreibtisch/facerecog/demoImages/unknown'
+image_dir = '/home/nayon/Schreibtisch/facerecognition/demoImages/unknown'
 for root, dirs, files in os.walk(image_dir):
     for file in files:
         print(root)
